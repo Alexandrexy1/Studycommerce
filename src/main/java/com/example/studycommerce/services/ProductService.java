@@ -32,12 +32,23 @@ public class ProductService {
     @Transactional
     public ProductDTO insert(ProductDTO productDTO) {
         Product entity = new Product();
-        entity.setName(productDTO.getName());
-        entity.setDescription(productDTO.getDescription());
-        entity.setPrice(productDTO.getPrice());
-        entity.setImgUrl(productDTO.getImgUrl());
-        entity = repository.save(entity);
-
+        copyDtoToProduct(entity, productDTO);
         return new ProductDTO(entity);
+    }
+
+    @Transactional
+    public ProductDTO update(Long id, ProductDTO productDTO) {
+        if (repository.findById(id).isPresent()) {
+            Product entity = repository.getReferenceById(id);
+            copyDtoToProduct(entity, productDTO);
+            return new ProductDTO(entity);
+        } else throw new IllegalArgumentException("Id does not exist.");
+    }
+
+    private void copyDtoToProduct(Product product, ProductDTO productDTO) {
+        product.setName(productDTO.getName());
+        product.setDescription(productDTO.getDescription());
+        product.setPrice(productDTO.getPrice());
+        product.setImgUrl(productDTO.getImgUrl());
     }
 }
