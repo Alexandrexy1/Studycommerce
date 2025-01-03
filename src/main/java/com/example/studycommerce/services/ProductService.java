@@ -3,6 +3,7 @@ package com.example.studycommerce.services;
 import com.example.studycommerce.DTO.ProductDTO;
 import com.example.studycommerce.entities.Product;
 import com.example.studycommerce.repositories.ProductRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,10 +18,10 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public ProductDTO findById(Long id) {
-        if (repository.findById(id).isPresent()) {
+        if (repository.existsById(id)) {
             Product product = repository.findById(id).get();
             return new ProductDTO(product);
-        } else throw new IllegalArgumentException("Id does not exist.");
+        } else throw new EntityNotFoundException("Product does not exist.");
     }
 
     @Transactional(readOnly = true)
@@ -38,11 +39,17 @@ public class ProductService {
 
     @Transactional
     public ProductDTO update(Long id, ProductDTO productDTO) {
-        if (repository.findById(id).isPresent()) {
-            Product entity = repository.getReferenceById(id);
-            copyDtoToProduct(entity, productDTO);
-            return new ProductDTO(entity);
-        } else throw new IllegalArgumentException("Id does not exist.");
+        if (!repository.existsById(id)) throw new EntityNotFoundException("Product with ID " + id + " does not exist.");
+        Product entity = repository.getReferenceById(id);
+        copyDtoToProduct(entity, productDTO);
+        return new ProductDTO(entity);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+        } else throw new EntityNotFoundException("Id does not exist.");
     }
 
     private void copyDtoToProduct(Product product, ProductDTO productDTO) {
