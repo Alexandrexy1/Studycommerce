@@ -2,6 +2,7 @@ package com.example.studycommerce.controllers;
 
 import com.example.studycommerce.DTO.ProductDTO;
 import com.example.studycommerce.services.ProductService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

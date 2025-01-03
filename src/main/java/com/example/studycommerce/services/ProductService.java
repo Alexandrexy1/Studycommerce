@@ -3,12 +3,18 @@ package com.example.studycommerce.services;
 import com.example.studycommerce.DTO.ProductDTO;
 import com.example.studycommerce.entities.Product;
 import com.example.studycommerce.repositories.ProductRepository;
+import com.example.studycommerce.services.exceptions.DatabaseException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.sql.SQLIntegrityConstraintViolationException;
+
 
 @Service
 public class ProductService {
@@ -18,10 +24,9 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public ProductDTO findById(Long id) {
-        if (repository.existsById(id)) {
-            Product product = repository.findById(id).get();
-            return new ProductDTO(product);
-        } else throw new EntityNotFoundException("Product does not exist.");
+        Product product = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Product not found."));
+        return new ProductDTO(product);
+
     }
 
     @Transactional(readOnly = true)
@@ -39,17 +44,20 @@ public class ProductService {
 
     @Transactional
     public ProductDTO update(Long id, ProductDTO productDTO) {
-        if (!repository.existsById(id)) throw new EntityNotFoundException("Product with ID " + id + " does not exist.");
+        if (!repository.existsById(id)) throw new EntityNotFoundException("Produto não existe");
         Product entity = repository.getReferenceById(id);
         copyDtoToProduct(entity, productDTO);
         return new ProductDTO(entity);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.SUPPORTS)
     public void delete(Long id) {
-        if (repository.existsById(id)) {
+        if (!repository.existsById(id)) throw new EntityNotFoundException("Produto não existe");
+        try {
             repository.deleteById(id);
-        } else throw new EntityNotFoundException("Id does not exist.");
+        } catch(DataIntegrityViolationException e) {
+            throw new DatabaseException("Deleção negada: o produto está associado a outros registros");
+        }
     }
 
     private void copyDtoToProduct(Product product, ProductDTO productDTO) {
