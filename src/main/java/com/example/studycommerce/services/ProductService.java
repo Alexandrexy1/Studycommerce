@@ -39,6 +39,7 @@ public class ProductService {
     public ProductDTO insert(ProductDTO productDTO) {
         Product entity = new Product();
         copyDtoToProduct(entity, productDTO);
+        entity = repository.save(entity);
         return new ProductDTO(entity);
     }
 
@@ -47,6 +48,7 @@ public class ProductService {
         if (!repository.existsById(id)) throw new EntityNotFoundException("Produto não existe");
         Product entity = repository.getReferenceById(id);
         copyDtoToProduct(entity, productDTO);
+        entity = repository.save(entity);
         return new ProductDTO(entity);
     }
 
